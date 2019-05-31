@@ -3,12 +3,14 @@
 #include <pthread.h>
 
 
-#define N 3
-#define T 2
+#define N 4
+#define T 8
 
 //Teste
 typedef struct Matrix{
-
+    int coordx;
+    int coordy;
+    int var;
     double **matrizprinc;
     double **matrizsup;
     double **matrizinf;
@@ -18,33 +20,52 @@ typedef struct Matrix{
 pthread_t outrosTIDs[16];
 matrix threads_argumento[16];
 
+int calculacoordy(int var, int ordem)
+{ 
+  return var%ordem;
+}
+
+int calculacoordx(int var, int ordem)
+{
+  return var/ordem;
+}
 void *dividir(void *arg){
+
+  int m=0, col=0;
   matrix *information = arg;
-  information->matrizprinc[0][0];
-
-  for(int lin=0; lin < N ; lin++)
-    {
-        for(int col=0 ; col < N ; col++)
-        {
-            if(col >= lin)
+ information->matrizprinc[0][0];
+            col = information->coordy;
+          for(int lin=information->coordx; lin < N ; lin++)
+          {
+            while ( col < N)
             {
-                information->matrizsup [lin][col] = information->matrizprinc[lin][col];
-                information->matrizinf [lin][col] = 0;
-            }
+                if(col >= lin)
+                {
+                    information->matrizsup [lin][col] = information->matrizprinc[lin][col];
+                    information->matrizinf [lin][col] = 0;
+                    m++;
+                }
 
-            else
-            {
-                information->matrizsup [lin][col] = 0;
-                information->matrizinf [lin][col] = information->matrizprinc[lin][col];
+                else
+                {
+                    information->matrizsup [lin][col] = 0;
+                    information->matrizinf [lin][col] = information->matrizprinc[lin][col];
+                    m++;
+                }
+                col++;
             }
-        }
-    }
+            col = 0;
+            if(m <= information->var)
+            {
+              break;
+            }
+          }
 
 }
-int main(void){
+int main(){
 
-    int x, y, lin = N, col= N; 
-    int i;          
+    int x, y, lin = N, col= N, ordem; 
+    int i;
     int pontos = 0;     // Marcador de pontos
     double **MATRIZ, **diagsup, **inf;        
     FILE *matriz, *diag1, *diag2; // Arquivo do campo minado
@@ -73,9 +94,9 @@ int main(void){
 
     for(x =0; x < lin; x++){
         for(y=0; y< col; y++){
-          MATRIZ [x][y] = 10;
-            //fscanf(matriz, "%lf", &MATRIZ[x][y]);
-               // printf("%3d", MATRIZ[x] [y]);
+        //  MATRIZ [x][y] = 10;
+            fscanf(matriz, "%lf", &MATRIZ[x][y]);
+                //printf("%lf", MATRIZ[x] [y]);
 
         }
             //printf("\n");
@@ -104,21 +125,26 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
      exit(EXIT_FAILURE);
      return 2;
   } 
-  for (x = 0; x < lin; x++){ //Percorre as linhas do Vetor de Ponteiros
-      inf[x] = (double*) malloc(col * sizeof(double));
-    }
+             // var = threads_argumento.var = N/T;
+              for (x = 0; x < lin; x++){ //Percorre as linhas do Vetor de Ponteiros
+                  inf[x] = (double*) malloc(col * sizeof(double));
+                }
 
-    for (i=0; i<T; i++){
-    
+                for (i=0; i<T; i++){
+                  threads_argumento[i].var = N/T;
 
-    threads_argumento[i].matrizprinc = MATRIZ;
-    threads_argumento[i].matrizsup = diagsup;
-    threads_argumento[i].matrizinf = inf;
+                  threads_argumento[i].matrizprinc = MATRIZ;
+                  threads_argumento[i].matrizsup = diagsup;
+                  threads_argumento[i].matrizinf = inf;
+                  threads_argumento[i].coordx = 0;
+                  threads_argumento[i].coordy = 0;
+                  threads_argumento[i].var = (N*N)/T;
+                  pthread_create(&outrosTIDs[i], NULL, dividir,(void *)&threads_argumento[i]);
 
-    pthread_create(&outrosTIDs[i], NULL, dividir,(void *)&threads_argumento[i]);
-
-    }
-    
+                  threads_argumento[i].coordx = calculacoordx(threads_argumento[i].var, ordem);
+                  threads_argumento[i].coordy = calculacoordy(threads_argumento[i].var, ordem);
+                }
+                
 
     for (i=0; i<T; i++){
 
