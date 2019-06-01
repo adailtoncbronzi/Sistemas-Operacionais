@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 
 
-#define N 4
-#define T 8
 
 //Teste
 typedef struct Matrix{
     int coordx;
     int coordy;
     int var;
+    int N;
     double **matrizprinc;
     double **matrizsup;
     double **matrizinf;
@@ -20,24 +20,15 @@ typedef struct Matrix{
 pthread_t outrosTIDs[16];
 matrix threads_argumento[16];
 
-int calculacoordy(int var, int ordem)
-{ 
-  return var%ordem;
-}
-
-int calculacoordx(int var, int ordem)
-{
-  return var/ordem;
-}
 void *dividir(void *arg){
 
   int m=0, col=0;
   matrix *information = arg;
  information->matrizprinc[0][0];
-            col = information->coordy;
-          for(int lin=information->coordx; lin < N ; lin++)
+           col = information->coordy;
+          for(int lin=information->coordx; lin < information->N ; lin++)
           {
-            while ( col < N)
+            while ( col < information->N)
             {
                 if(col >= lin)
                 {
@@ -62,16 +53,17 @@ void *dividir(void *arg){
           }
 
 }
-int main(){
-
-    int x, y, lin = N, col= N, ordem; 
+int main(int argc, char *argv[]){
+    int T = atoi(argv[2]);
+    int N = atoi(argv[1]);
+    int x, y, lin = N, col= N; 
     int i;
     int pontos = 0;     // Marcador de pontos
     double **MATRIZ, **diagsup, **inf;        
     FILE *matriz, *diag1, *diag2; // Arquivo do campo minado
 
 
-    matriz = fopen("Matriz.txt", "r"); // Lê documento Tabuleiro.txt
+    matriz = fopen(argv[3], "r"); // Lê documento Matriz.txt
 
     if (matriz == NULL) // Caso não consiga ler
     {
@@ -130,19 +122,17 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
                   inf[x] = (double*) malloc(col * sizeof(double));
                 }
 
-                for (i=0; i<T; i++){
+                for (i=0; i<T; i++){ // i  == ID da thread
                   threads_argumento[i].var = N/T;
-
+		  threads_argumento[i].N = N;
                   threads_argumento[i].matrizprinc = MATRIZ;
                   threads_argumento[i].matrizsup = diagsup;
                   threads_argumento[i].matrizinf = inf;
-                  threads_argumento[i].coordx = 0;
-                  threads_argumento[i].coordy = 0;
+                  threads_argumento[i].coordx = (((N*N)/T)*i)/N; // calcula cordx
+                  threads_argumento[i].coordy = (((N*N)%T)*i)%N; // calcula cordy
                   threads_argumento[i].var = (N*N)/T;
                   pthread_create(&outrosTIDs[i], NULL, dividir,(void *)&threads_argumento[i]);
 
-                  threads_argumento[i].coordx = calculacoordx(threads_argumento[i].var, ordem);
-                  threads_argumento[i].coordy = calculacoordy(threads_argumento[i].var, ordem);
                 }
                 
 
@@ -151,7 +141,7 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
     pthread_join(outrosTIDs[i], NULL);
     }
 
-    diag2 = fopen("diag2.txt", "w");
+    diag2 = fopen(strcat(argv[3], ".diag2"), "w");
     if (diag2 == NULL) // Caso não consiga ler
     {
         printf("ERRO! Impossivel abrir o arquivo diag2!");
@@ -176,8 +166,7 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
         }
         fprintf(diag2, "\n");
     }
-
-    diag1 = fopen("diag1.txt", "w");
+    diag1 = fopen(strcat(diag1, ".diag1"), "w");
 
 
     if (diag1 == NULL) // Caso não consiga ler
