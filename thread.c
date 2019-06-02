@@ -11,6 +11,7 @@ typedef struct Matrix{
     int coordy;
     int var;
     int N;
+   // int eu;
     double **matrizprinc;
     double **matrizsup;
     double **matrizinf;
@@ -34,29 +35,37 @@ void *dividir(void *arg){
                 {
                     information->matrizsup [lin][col] = information->matrizprinc[lin][col];
                     information->matrizinf [lin][col] = 0;
+                   // printf("Elementos da matriz SUP %lf, eu sou a thread [%d]\n", information->matrizsup[lin][col], information->eu);
+                   // printf("Elementos da matriz INF %lf, eu sou a thread [%d]\n", information->matrizinf[lin][col], information->eu);
                     m++;
+                    if(m >= information->var)
+                    {
+                      return 0;
+                    }
                 }
 
                 else
                 {
                     information->matrizsup [lin][col] = 0;
                     information->matrizinf [lin][col] = information->matrizprinc[lin][col];
+                   // printf("Elementos da matriz SUP %lf, eu sou a thread [%d]\n", information->matrizsup[lin][col], information->eu);
+                   // printf("Elementos da matriz INF %lf, eu sou a thread [%d]\n", information->matrizinf[lin][col], information->eu);
                     m++;
+                    if(m >= information->var)
+                    {
+                     return 0;
+                    }
                 }
                 col++;
             }
             col = 0;
-            if(m <= information->var)
-            {
-              break;
-            }
           }
 
 }
 int main(int argc, char *argv[]){
     int T = atoi(argv[2]);
     int N = atoi(argv[1]);
-    int x, y, lin = N, col= N; 
+    int x, y, lin = N, col= N, resto=0; 
     int i;
     int pontos = 0;     // Marcador de pontos
     double **MATRIZ, **diagsup, **inf;        
@@ -123,14 +132,19 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
                 }
 
                 for (i=0; i<T; i++){ // i  == ID da thread
-                  threads_argumento[i].var = N/T;
-		  threads_argumento[i].N = N;
+		              threads_argumento[i].N = N;
                   threads_argumento[i].matrizprinc = MATRIZ;
                   threads_argumento[i].matrizsup = diagsup;
                   threads_argumento[i].matrizinf = inf;
                   threads_argumento[i].coordx = (((N*N)/T)*i)/N; // calcula cordx
                   threads_argumento[i].coordy = (((N*N)%T)*i)%N; // calcula cordy
                   threads_argumento[i].var = (N*N)/T;
+                 // threads_argumento[i].eu = i;
+                  if(i == T-1)
+                   {
+                    resto = (N*N)%T;
+                    threads_argumento[i].var = ((N * N) / T) + resto;
+                   }
                   pthread_create(&outrosTIDs[i], NULL, dividir,(void *)&threads_argumento[i]);
 
                 }
@@ -141,7 +155,7 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
     pthread_join(outrosTIDs[i], NULL);
     }
 
-    diag2 = fopen(strcat(argv[3], ".diag2"), "w");
+    diag2 = fopen("Matriz.diag2", "w");
     if (diag2 == NULL) // Caso não consiga ler
     {
         printf("ERRO! Impossivel abrir o arquivo diag2!");
@@ -166,7 +180,7 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
         }
         fprintf(diag2, "\n");
     }
-    diag1 = fopen(strcat(diag1, ".diag1"), "w");
+    diag1 = fopen("Matriz.diag1", "w");
 
 
     if (diag1 == NULL) // Caso não consiga ler
