@@ -3,4 +3,5 @@ Trabalho da matéria de Sistemas Operacionais do curso de Sistemas de Informaç�
 
 # Compile with
 gcc -pthread thread.c -o thread
+
 ./thread 4 8 exemplo.dat
