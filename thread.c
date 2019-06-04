@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
+#include <sys/time.h> 
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------
@@ -29,6 +30,15 @@ typedef struct Matrix {
 
 pthread_t outrosTIDs[16];
 matrix threads_argumento[16];
+/*
+------------------------------------------------------------------------------------------------------------------------------
+										FUNCAO DO TEMPO DE PROCESSAMENTO
+------------------------------------------------------------------------------------------------------------------------------ */
+
+float timedifference_msec(struct timeval t0, struct timeval t1)
+{
+    return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
+}
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------
@@ -70,9 +80,13 @@ int main(int argc, char * argv[]) {
 ------------------------------------------------------------------------------------------------------------------------------ */
 
     int num_threads = atoi(argv[2]), ordem_matriz = atoi(argv[1]), indice_x, indice_y, lin = ordem_matriz,
-    col = ordem_matriz, resto = 0, id;
+    col = ordem_matriz, resto = 0, id, j;
     double **MATRIZ, **diagsup, **diaginf;
     FILE *matriz, *diag1, *diag2;
+    struct timeval t0;
+    struct timeval t1;
+    float elapsed;
+ 
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------
@@ -138,6 +152,7 @@ int main(int argc, char * argv[]) {
 						DEFININDO OS VALORES DAS VARIAVEIS DA STRUCT E CRIACAO DA THREAD
 ------------------------------------------------------------------------------------------------------------------------------ */
 
+    gettimeofday(&t0, 0);
     for (id = 0; id < num_threads; id++) {
         threads_argumento[id].ordem_matriz = ordem_matriz;
         threads_argumento[id].matrizprincipal = MATRIZ;
@@ -159,6 +174,14 @@ int main(int argc, char * argv[]) {
 
     for (id = 0; id < num_threads; id++)
         pthread_join(outrosTIDs[id], NULL);
+
+/*
+------------------------------------------------------------------------------------------------------------------------------
+											TEMPO DE PROCESSAMENTO
+------------------------------------------------------------------------------------------------------------------------------ */
+    gettimeofday(&t1, 0);
+    elapsed = timedifference_msec(t0, t1);
+    printf("Code executed in %f milliseconds.\n", elapsed);
 /*
 ------------------------------------------------------------------------------------------------------------------------------
 									ESCREVENDO O RESULTADO DA DIVISAO NOS ARQUIVOS
