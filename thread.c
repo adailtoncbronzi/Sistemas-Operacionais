@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
-
-
+//#include <time.h>
+#include <sys/time.h>   
 
 //Teste
 typedef struct Matrix{
@@ -21,7 +21,16 @@ typedef struct Matrix{
 pthread_t outrosTIDs[16];
 matrix threads_argumento[16];
 
+ 
+float timedifference_msec(struct timeval t0, struct timeval t1)
+{
+    return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
+}
+
+
 void *dividir(void *arg){
+
+   
 
   int m=0, col=0;
   matrix *information = arg;
@@ -61,6 +70,7 @@ void *dividir(void *arg){
             col = 0;
           }
 
+    
 }
 int main(int argc, char *argv[]){
     int T = atoi(argv[2]);
@@ -70,6 +80,13 @@ int main(int argc, char *argv[]){
     int pontos = 0;     // Marcador de pontos
     double **MATRIZ, **diagsup, **inf;        
     FILE *matriz, *diag1, *diag2; // Arquivo do campo minado
+
+   struct timeval t0;
+   struct timeval t1;
+   float elapsed;
+   int j;
+ 
+
 
 
     matriz = fopen(argv[3], "r"); // Lê documento Matriz.txt
@@ -130,7 +147,9 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
               for (x = 0; x < lin; x++){ //Percorre as linhas do Vetor de Ponteiros
                   inf[x] = (double*) malloc(col * sizeof(double));
                 }
-
+	
+	       
+                gettimeofday(&t0, 0);
                 for (i=0; i<T; i++){ // i  == ID da thread
 		              threads_argumento[i].N = N;
                   threads_argumento[i].matrizprinc = MATRIZ;
@@ -154,6 +173,18 @@ inf = (double**)malloc((col*lin)*sizeof(double *));
 
     pthread_join(outrosTIDs[i], NULL);
     }
+    //TIME
+   for (j=0; j<100000000; j++)
+   {
+   }
+   
+   gettimeofday(&t1, 0);
+
+   elapsed = timedifference_msec(t0, t1);
+
+   printf("Code executed in %f milliseconds.\n", elapsed);
+
+
 
     diag2 = fopen("Matriz.diag2", "w");
     if (diag2 == NULL) // Caso não consiga ler
