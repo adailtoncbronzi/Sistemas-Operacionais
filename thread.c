@@ -1,9 +1,9 @@
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-				CODIGO REFERENTE AO TRABALHO DE SISTEMAS OPERACIONAIS, MINISTRADA PELO PROFESSOR LEON GRADVOHL.
-												1o SEMESTRE DE 2019.
+CODIGO REFERENTE AO TRABALHO DE SISTEMAS OPERACIONAIS, MINISTRADA PELO PROFESSOR LEON GRADVOHL.
+1o SEMESTRE DE 2019.
 
-					DESENVOLVIDO POR GABRIEL FERREIRA, JULIANA MORRONI E LARISSA BENEVIDES.
+DESENVOLVIDO POR GABRIEL FERREIRA, JULIANA MORRONI E LARISSA BENEVIDES.
 ------------------------------------------------------------------------------------------------------------------------------ */
 
 #include <stdio.h>
@@ -11,10 +11,9 @@
 #include <pthread.h>
 #include <string.h>
 #include <sys/time.h> 
-
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-						DECLARACAO DA STRUCT QUE SERA PASSADA COMO PARAMETRO DA THREAD
+DECLARACAO DA STRUCT QUE SERA PASSADA COMO PARAMETRO DA THREAD
 ------------------------------------------------------------------------------------------------------------------------------ */
 
 typedef struct Matrix {
@@ -32,17 +31,16 @@ pthread_t outrosTIDs[16];
 matrix threads_argumento[16];
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-										FUNCAO DO TEMPO DE PROCESSAMENTO
+FUNCAO DO TEMPO DE PROCESSAMENTO
 ------------------------------------------------------------------------------------------------------------------------------ */
 
 float timedifference_msec(struct timeval t0, struct timeval t1)
 {
     return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
 }
-
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-					FUNCAO DA THREAD QUE DIVIDE AS MATRIZES EM SUPERIOR E INFERIOR
+FUNCAO DA THREAD QUE DIVIDE AS MATRIZES EM SUPERIOR E INFERIOR
 ------------------------------------------------------------------------------------------------------------------------------ */
 
 void * dividir(void * arg) {
@@ -73,31 +71,29 @@ void * dividir(void * arg) {
 }
 
 int main(int argc, char * argv[]) {
-
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-											DECLARACAO DAS VARIAVEIS
+DECLARACAO DAS VARIAVEIS
 ------------------------------------------------------------------------------------------------------------------------------ */
 
     int num_threads = atoi(argv[2]), ordem_matriz = atoi(argv[1]), indice_x, indice_y, lin = ordem_matriz,
-    col = ordem_matriz, resto = 0, id, j;
+    col = ordem_matriz, resto = 0, id, j, tam_string = strlen(argv[argc-1]);;
+    char nome_arq1[tam_string-4], nome_arq2[tam_string-4];
     double **MATRIZ, **diagsup, **diaginf;
     FILE *matriz, *diag1, *diag2;
     struct timeval t0;
     struct timeval t1;
     float elapsed;
- 
-
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-										CONDICAO DE NUMERO MAXIMO DE THREADS
+CONDICAO DE NUMERO MAXIMO DE THREADS
 ------------------------------------------------------------------------------------------------------------------------------ */
 
     if(num_threads > ordem_matriz)
     	num_threads = ordem_matriz;
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-											ABERTURA DO ARQUIVO MATRIZ.TXT
+ABERTURA DO ARQUIVO MATRIZ.TXT
 ------------------------------------------------------------------------------------------------------------------------------ */
 
     matriz = fopen(argv[3], "r");
@@ -108,7 +104,7 @@ int main(int argc, char * argv[]) {
     }
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-						ALOCACAO DINAMICA DA MATRIZ PRINCIPAL E LEITURA DOS VALORES NO ARQUIVO
+ALOCACAO DINAMICA DA MATRIZ PRINCIPAL E LEITURA DOS VALORES NO ARQUIVO
 ------------------------------------------------------------------------------------------------------------------------------ */
 
     MATRIZ = (double ** ) malloc(sizeof(double * ) * (col * lin));
@@ -123,10 +119,9 @@ int main(int argc, char * argv[]) {
     for (indice_x = 0; indice_x < lin; indice_x++)
         for (indice_y = 0; indice_y < col; indice_y++)
             fscanf(matriz, "%lf", &MATRIZ[indice_x][indice_y]);
-
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-				ALOCACAO DINAMICA DAS MATRIZES AUXILIARES (MATRIZ DIAGONAL SUPERIOR E DIAGONAL INFERIOR)
+ALOCACAO DINAMICA DAS MATRIZES AUXILIARES (MATRIZ DIAGONAL SUPERIOR E DIAGONAL INFERIOR)
 ------------------------------------------------------------------------------------------------------------------------------ */
 
     diagsup = (double ** ) malloc((col * lin) * sizeof(double * ));
@@ -149,7 +144,7 @@ int main(int argc, char * argv[]) {
         diaginf[indice_x] = (double * ) malloc(col * sizeof(double));
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-						DEFININDO OS VALORES DAS VARIAVEIS DA STRUCT E CRIACAO DA THREAD
+DEFININDO OS VALORES DAS VARIAVEIS DA STRUCT E CRIACAO DA THREAD
 ------------------------------------------------------------------------------------------------------------------------------ */
 
     gettimeofday(&t0, 0);
@@ -169,7 +164,7 @@ int main(int argc, char * argv[]) {
     }
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-											JUNCAO DAS THREADS CRIADAS
+JUNCAO DAS THREADS CRIADAS
 ------------------------------------------------------------------------------------------------------------------------------ */
 
     for (id = 0; id < num_threads; id++)
@@ -177,23 +172,27 @@ int main(int argc, char * argv[]) {
 
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-											TEMPO DE PROCESSAMENTO
+TEMPO DE PROCESSAMENTO
 ------------------------------------------------------------------------------------------------------------------------------ */
     gettimeofday(&t1, 0);
     elapsed = timedifference_msec(t0, t1);
     printf("Code executed in %f milliseconds.\n", elapsed);
 /*
 ------------------------------------------------------------------------------------------------------------------------------
-									ESCREVENDO O RESULTADO DA DIVISAO NOS ARQUIVOS
+ESCREVENDO O RESULTADO DA DIVISAO NOS ARQUIVOS
 ------------------------------------------------------------------------------------------------------------------------------ */
+    
+    strncpy(nome_arq1, argv[argc-1], tam_string-4);
+    strncpy(nome_arq2, argv[argc-1], tam_string-4);
+    nome_arq2[tam_string-4] = '\0';
+    nome_arq1[tam_string-4] = '\0';
 
-    diag2 = fopen("Matriz.diag2", "w");
+    diag2 = fopen(strcat(nome_arq2, ".diag2"), "w");
     if (diag2 == NULL)
     {
         printf("ERRO! Impossivel abrir o arquivo diag2!");
         return 1;
     }
-
     for (lin = 0; lin < ordem_matriz; lin++) {
         for (col = 0; col < ordem_matriz; col++) {
                 fprintf(diag2, "%f ", diaginf[lin][col]);
@@ -201,7 +200,7 @@ int main(int argc, char * argv[]) {
         fprintf(diag2, "\n");
     }
 
-    diag1 = fopen("Matriz.diag1", "w");
+    diag1 = fopen(strcat(nome_arq1, ".diag1"), "w");
 
     if (diag1 == NULL)
     {
